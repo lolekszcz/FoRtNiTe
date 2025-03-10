@@ -1,5 +1,8 @@
+import socket
+
 import pygame
 from classes import GameObject,Player
+
 
 class Simulation:
     def __init__(self, app):
@@ -14,6 +17,11 @@ class Simulation:
         self.objects=[]
         self.selected_button = None
 
+        self.socket = socket.socket()
+        print("aaaa")
+        self.socket.connect(('127.0.0.1', 12345))
+
+        self.players = {}
 
         self.w=False
         self.s = False
@@ -31,6 +39,27 @@ class Simulation:
                 object.move()
                 object.plan_wall()
             object.render()
+
+        for player in self.players:
+            player.render()
+
+        self.socket.send(f"X={self.player.x};Y={self.player.y}".encode())
+
+        # Receive response from server
+        response = self.socket.recv(1024).decode()
+
+        player_data = response.split(";")
+        p_id = response[2]
+        if p_id not in self.players.keys():
+            Player.Player(self, 0, 0, 100, 100, None)
+        else:
+            player = self.players[p_id]
+            posX = int(player_data[0][2:])
+            posY = int(player_data[1][2:])
+
+            player.x = posX
+            player.y = posY
+        print(response)
 
     # Overrides the default events function in app.py
     def events(self):
@@ -84,3 +113,6 @@ class Simulation:
                     self.a=False
                 elif event.key==pygame.K_d:
                     self.d=False
+
+                if event.key == pygame.K_f:
+                    print(self.socket.recv(1024).decode())
