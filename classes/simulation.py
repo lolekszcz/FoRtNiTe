@@ -76,7 +76,9 @@ class Simulation:
 
                 if a[2]:
                     self.right=True
-                    self.player.build_wall()
+                    if self.q:
+
+                        self.player.build_wall()
 
 
             if event.type==pygame.MOUSEBUTTONUP:
