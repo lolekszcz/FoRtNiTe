@@ -10,10 +10,11 @@ class Player:
         self.Health = health
 
 class Building:
-    def __init__(self, position, type, health):
+    def __init__(self, position, dimensions, health, owner_id):
         self.Position = position
-        self.type = type
+        self.dimensions = dimensions
         self.health = health
+        self.owner_id = owner_id
 
 class Bullet:
     def __init__(self, position, caliber, speed):
@@ -33,6 +34,7 @@ class Server:
 
         self.clients = []
         self.players = []
+        self.walls = []
 
 
         print("socket is listening")
@@ -48,39 +50,66 @@ class Server:
                     # If no data is received, the client has disconnected
                     break
 
-                data = data_raw.decode()
+                data_temp = data_raw.decode()
 
-                positions = data.split(";")
+                header, data = data_temp.split('|')
 
-                try:
-                    if len(positions) >= 2:
-                        posX = int(positions[0][2:])
-                        posY = int(positions[1][2:])
+                response = "No data to sync"
 
-                        self.players[client_id].Position = [posX, posY]
+                if header == "UPDATE_OWN_POSITION":
+                    positions = data.split(";")
+                    try:
+                        if len(positions) >= 2:
+                            posX = int(positions[0][2:])
+                            posY = int(positions[1][2:])
 
-                        response = "No other players"
+                            self.players[client_id].Position = [posX, posY]
 
-                        for i, player in enumerate(self.players):
-                            if i != client_id:
-                                response = f"X={player.Position[0]};Y={player.Position[1]};ID={i};"
+                            # print(f"Player num: {len(self.players)}")
+                            # print(f"Client position: {posX},{posY}")
 
-                        print(f"Player num: {len(self.players)}")
-                        print(f"Client position: {posX},{posY}")
+                    except:
+                        print("oof")
+                elif header == "ADD_BUILDING":
+                    parameters = data.split(";")
+                    try:
+                        if len(parameters) >= 2:
+                            posX = int(parameters[0][2:])
+                            posY = int(parameters[1][2:])
 
-                        client_socket.send(response.encode())
+                            width = int(parameters[2][2:])
+                            height = int(parameters[3][2:])
 
-                except:
-                    print("oof")
+                            self.walls.append(Building([posX, posY], [width, height], 100, client_id))
+                            response = "Wall added"
+                            print(f"Wall position: {posX},{posY}")
+                            print("AAAAAAAAAA")
+
+                            # print(f"Player num: {len(self.players)}")
+                            # print(f"Client position: {posX},{posY}")
+
+                    except:
+                        print("oof")
+
                 # Process the data and send a response back to the client
+                response = " "
+                for i, player in enumerate(self.players):
+                    if i != client_id:
+                        response = (f"X={player.Position[0]};Y={player.Position[1]};ID={i};")  # other player
+                response += "\n"
 
+                # Buildings
+                for building in self.walls:
+                    response += f"X={building.Position[0]};Y={building.Position[1]};W={building.dimensions[0]};H={building.dimensions[1]};HP={building.health};OWNER={building.owner_id};|"
+
+                client_socket.send(response.encode())
             except Exception as e:
                 print(f"Error: {e}")
                 break
 
         # Close the connection if the client disconnects
         print("Closing connection...")
-        self.players.remove(client_id)
+        self.players.pop(client_id)
         client_socket.close()
     def update_server(self):
         # Establish connection with client.

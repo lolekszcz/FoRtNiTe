@@ -4,8 +4,8 @@ import math
 max_health=100
 player_speed=5
 class Player(GameObject):
-    def __init__(self,game,x,y,w,h,image, isLocal=False):
-        super().__init__(game,x,y,w,h,image, isLocal=isLocal)
+    def __init__(self,game,x,y,w,h,image, color=(255,255,255), isLocal=False):
+        super().__init__(game,x,y,w,h,image, color=color, isLocal=isLocal)
         self.health=max_health
         self.speed=player_speed
         self.vwall = GameObject(self.game, self.game.mouse_pos[0], self.game.mouse_pos[1], 100, 50, None,
@@ -79,4 +79,6 @@ class Player(GameObject):
     def build_wall(self):
         if self.timer>=20:
             self.timer=0
-            Wall(self.game,self.vwall.x,self.vwall.y,self.vwall.w,self.vwall.h,None)
+            wall = Wall(self.game,self.vwall.x,self.vwall.y,self.vwall.w,self.vwall.h,None)
+            self.game.socket.send(f"ADD_BUILDING|X={self.vwall.x};Y={self.vwall.y};Y={self.vwall.w};Y={self.vwall.h};".encode())
+            return wall

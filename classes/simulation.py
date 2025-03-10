@@ -3,6 +3,7 @@ import socket
 import pygame
 
 from classes import GameObject,Player
+from classes.Obstacles import Wall
 
 
 class Simulation:
@@ -23,6 +24,7 @@ class Simulation:
         self.socket.connect(('127.0.0.1', 12345))
 
         self.players = {}
+        self.buildings = []
 
         self.w=False
         self.s = False
@@ -34,6 +36,51 @@ class Simulation:
         self.mouse_pos = pygame.mouse.get_pos()
         self.player=Player.Player(self,0,0,100,100,None, isLocal=True)
     def render(self):
+        self.socket.send(f"UPDATE_OWN_POSITION|X={self.player.x};Y={self.player.y}".encode())
+
+        # Receive response from server
+        response = self.socket.recv(1024).decode()
+
+        if ";" in response:
+            print(response)
+            data = response.split("\n")
+            pl_data = data[0]
+            building_data = data[1]
+
+            # Player stuff
+            if ";" in pl_data:
+                player_data = pl_data.split(";")
+                p_id = player_data[2]
+                print(self.players.keys())
+                if p_id not in self.players.keys():
+                    self.players[p_id] = Player.Player(self, 0, 0, 100, 100, None, color=(200, 0,0))
+                else:
+                    player = self.players[p_id]
+                    posX = int(player_data[0][2:])
+                    posY = int(player_data[1][2:])
+
+                    player.x = posX
+                    player.y = posY
+
+            # Building stuff
+            if ";" in building_data:
+                self.clear_buildings()
+                buildings = building_data.split('|')
+                print(len(buildings))
+                buildings.pop(-1)
+                print(buildings)
+                for building in buildings:
+                        building_data = building.split(';')
+                        posX = int(building_data[0][2:])
+                        posY = int(building_data[1][2:])
+
+                        width = int(building_data[2][2:])
+                        height = int(building_data[3][2:])
+
+                        health = int(building_data[4][3:])
+
+                        self.buildings.append(Wall(self, posX, posY,width,height,None))
+
         self.window.fill(self.bg_color)
         for object in self.objects:
             if type(object)==Player.Player and object.isLocal:
@@ -41,35 +88,18 @@ class Simulation:
                 object.plan_wall()
             elif type(object)==Player.Player:
                 object.update()
-                object.borders()
+                #object.borders()
             object.render()
 
         for player in self.players.values():
             player.render()
 
-        self.socket.send(f"X={self.player.x};Y={self.player.y}".encode())
-
-        # Receive response from server
-        response = self.socket.recv(1024).decode()
-
-        if ";" in response:
-            player_data = response.split(";")
-            p_id = player_data[2]
-            print(response)
-            print(self.players.keys())
-            if p_id not in self.players.keys():
-                self.players[p_id] = Player.Player(self, 0, 0, 100, 100, None)
-            else:
-                player = self.players[p_id]
-                posX = int(player_data[0][2:])
-                posY = int(player_data[1][2:])
-
-                player.x = posX
-                player.y = posY
-
-
         #print(response)
-
+    def clear_buildings(self):
+        for build in self.buildings:
+            self.objects.remove(build)
+            del build
+        self.buildings = []
     # Overrides the default events function in app.py
     def events(self):
         self.mouse_pos = pygame.mouse.get_pos()
@@ -86,8 +116,8 @@ class Simulation:
                 if a[2]:
                     self.right=True
                     if self.q:
+                        self.buildings.append(self.player.build_wall())
 
-                        self.player.build_wall()
 
 
             if event.type==pygame.MOUSEBUTTONUP:
