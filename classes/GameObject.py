@@ -1,12 +1,13 @@
 import pygame
 class GameObject():
-    def __init__(self,game,x,y,w,h,image,color=(255,255,255),server=True,visible=True):
+    def __init__(self,game,x,y,w,h,image,color=(255,255,255),server=True,visible=True,isLocal=False):
         self.game=game
         self.x=x
         self.y=y
         self.w=w
         self.h=h
         self.server=server
+        self.isLocal = isLocal
         self.visible=visible
 
         self.game.objects.append(self)

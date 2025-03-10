@@ -4,8 +4,8 @@ import math
 max_health=100
 player_speed=5
 class Player(GameObject):
-    def __init__(self,game,x,y,w,h,image):
-        super().__init__(game,x,y,w,h,image)
+    def __init__(self,game,x,y,w,h,image, isLocal=False):
+        super().__init__(game,x,y,w,h,image, isLocal=isLocal)
         self.health=max_health
         self.speed=player_speed
         self.vwall = GameObject(self.game, self.game.mouse_pos[0], self.game.mouse_pos[1], 100, 50, None,

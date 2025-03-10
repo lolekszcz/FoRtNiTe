@@ -2,8 +2,6 @@ import asyncio
 import threading
 from socket import socket
 
-import websockets
-
 class Player:
     def __init__(self, position, current_weapon, rotation, health):
         self.Position = position
@@ -55,18 +53,19 @@ class Server:
                 positions = data.split(";")
 
                 try:
-                    if len(positions) == 2:
+                    if len(positions) >= 2:
                         posX = int(positions[0][2:])
                         posY = int(positions[1][2:])
 
                         self.players[client_id].Position = [posX, posY]
 
-                        response = ""
+                        response = "No other players"
 
                         for i, player in enumerate(self.players):
                             if i != client_id:
-                                response = f"X={player.Position[0]};Y={player.Position[1]};ID={i}"
+                                response = f"X={player.Position[0]};Y={player.Position[1]};ID={i};"
 
+                        print(f"Player num: {len(self.players)}")
                         print(f"Client position: {posX},{posY}")
 
                         client_socket.send(response.encode())
@@ -81,6 +80,7 @@ class Server:
 
         # Close the connection if the client disconnects
         print("Closing connection...")
+        self.players.remove(client_id)
         client_socket.close()
     def update_server(self):
         # Establish connection with client.

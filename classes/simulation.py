@@ -1,6 +1,7 @@
 import socket
 
 import pygame
+
 from classes import GameObject,Player
 
 
@@ -31,16 +32,19 @@ class Simulation:
         self.left=False
         self.right=False
         self.mouse_pos = pygame.mouse.get_pos()
-        self.player=Player.Player(self,0,0,100,100,None)
+        self.player=Player.Player(self,0,0,100,100,None, isLocal=True)
     def render(self):
         self.window.fill(self.bg_color)
         for object in self.objects:
-            if type(object)==Player.Player:
+            if type(object)==Player.Player and object.isLocal:
                 object.move()
                 object.plan_wall()
+            elif type(object)==Player.Player:
+                object.update()
+                object.borders()
             object.render()
 
-        for player in self.players:
+        for player in self.players.values():
             player.render()
 
         self.socket.send(f"X={self.player.x};Y={self.player.y}".encode())
@@ -48,18 +52,23 @@ class Simulation:
         # Receive response from server
         response = self.socket.recv(1024).decode()
 
-        player_data = response.split(";")
-        p_id = response[2]
-        if p_id not in self.players.keys():
-            Player.Player(self, 0, 0, 100, 100, None)
-        else:
-            player = self.players[p_id]
-            posX = int(player_data[0][2:])
-            posY = int(player_data[1][2:])
+        if ";" in response:
+            player_data = response.split(";")
+            p_id = player_data[2]
+            print(response)
+            print(self.players.keys())
+            if p_id not in self.players.keys():
+                self.players[p_id] = Player.Player(self, 0, 0, 100, 100, None)
+            else:
+                player = self.players[p_id]
+                posX = int(player_data[0][2:])
+                posY = int(player_data[1][2:])
 
-            player.x = posX
-            player.y = posY
-        print(response)
+                player.x = posX
+                player.y = posY
+
+
+        #print(response)
 
     # Overrides the default events function in app.py
     def events(self):
