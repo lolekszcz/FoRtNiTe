@@ -14,7 +14,10 @@ class GameObject():
         self.color = color
         if self.image!=None:
             pygame.transform.scale(self.image,self.rect)
-
+    def update(self):
+        self.rect = pygame.Rect((self.x, self.y,self. w, self.h))
+        if self.image!=None:
+            pygame.transform.scale(self.image,self.rect)
     def render(self):
         if self.image != None:
             self.window.blit(self.image,self.rect)
