@@ -6,4 +6,5 @@ class Wall(GameObject):
         self.game=game
         self.x=x
         self.y=y
-        self.w=self.h=h
+        self.w=w
+        self.h=h

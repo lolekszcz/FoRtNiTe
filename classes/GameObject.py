@@ -1,11 +1,13 @@
 import pygame
 class GameObject():
-    def __init__(self,game,x,y,w,h,image,color=(255,255,255)):
+    def __init__(self,game,x,y,w,h,image,color=(255,255,255),server=True,visible=True):
         self.game=game
         self.x=x
         self.y=y
         self.w=w
         self.h=h
+        self.server=server
+        self.visible=visible
 
         self.game.objects.append(self)
 
@@ -19,8 +21,9 @@ class GameObject():
         if self.image!=None:
             pygame.transform.scale(self.image,self.rect)
     def render(self):
-        if self.image != None:
-            self.window.blit(self.image,self.rect)
-        else:
+        if self.visible:
+            if self.image != None:
+                self.window.blit(self.image, self.rect)
+            else:
 
-            pygame.draw.rect(self.game.window,self.color,self.rect)
+                pygame.draw.rect(self.game.window, self.color, self.rect)

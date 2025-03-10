@@ -1,4 +1,5 @@
 from classes.GameObject import GameObject
+from classes.Obstacles import Wall
 max_health=100
 player_speed=5
 class Player(GameObject):
@@ -6,8 +7,10 @@ class Player(GameObject):
         super().__init__(game,x,y,w,h,image)
         self.health=max_health
         self.speed=player_speed
+        self.vwall = GameObject(self.game, self.game.mouse_pos[0], self.game.mouse_pos[1], 100, 50, None,
+                                color=(100, 0, 0), server=False, visible=False)
     def move(self):
-        print('xx')
+
         if self.game.w:
             self.y-=self.speed
         elif self.game.s:
@@ -27,5 +30,11 @@ class Player(GameObject):
             self.y=0
         if self.y>=self.game.height-self.h:
             self.y=self.game.height-self.h
+    def plan_wall(self):
+        if self.game.q:
+
+            self.vwall.visible=True
+        else:
+            self.vwall.visible = False
     def build_wall(self):
         pass
