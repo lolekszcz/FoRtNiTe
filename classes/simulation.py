@@ -5,9 +5,8 @@ import pygame
 from classes import GameObject,Player
 from classes.Obstacles import Wall
 
-
 class Simulation:
-    def __init__(self, app):
+    def __init__(self, app, server_ip):
         self.app = app
         self.debug = False
         self.bg_color = (33, 33, 33)
@@ -17,11 +16,13 @@ class Simulation:
         self.height=self.app.height
         self.side_margin = int(20 * self.app.scale)
         self.objects=[]
+        self.bullets = []
         self.selected_button = None
 
         self.socket = socket.socket()
         print("aaaa")
-        self.socket.connect(('127.0.0.1', 12345))
+        self.server_ip = server_ip
+        self.socket.connect((self.server_ip, 12345))
 
         self.players = {}
         self.buildings = []
@@ -38,37 +39,47 @@ class Simulation:
     def render(self):
         self.socket.send(f"UPDATE_OWN_POSITION|X={self.player.x};Y={self.player.y}".encode())
 
+        for bullet in self.bullets:
+            bullet.update()
+
         # Receive response from server
         response = self.socket.recv(1024).decode()
 
         if ";" in response:
-            print(response)
+            print("Response:" + response)
             data = response.split("\n")
-            pl_data = data[0]
+            pl_data1 = data[0]
             building_data = data[1]
+            print("Building data:" + building_data)
 
             # Player stuff
-            if ";" in pl_data:
-                player_data = pl_data.split(";")
-                p_id = player_data[2]
-                print(self.players.keys())
-                if p_id not in self.players.keys():
-                    self.players[p_id] = Player.Player(self, 0, 0, 100, 100, None, color=(200, 0,0))
-                else:
-                    player = self.players[p_id]
-                    posX = int(player_data[0][2:])
-                    posY = int(player_data[1][2:])
+            if ";" in pl_data1:
+                all_player_data = pl_data1.split('|')
+                if " " in all_player_data:
+                    all_player_data.remove(" ")
+                all_player_data.pop(-1)
+                #print(all_player_data)
+                for pl_data1 in all_player_data:
+                    player_data = pl_data1.split(";")
+                    p_id = player_data[2]
+                    #print(self.players.keys())
+                    if p_id not in self.players.keys():
+                        self.players[p_id] = Player.Player(self, 0, 0, 100, 100, None, color=(200, 0,0))
+                    else:
+                        player = self.players[p_id]
+                        posX = int(player_data[0][2:])
+                        posY = int(player_data[1][2:])
 
-                    player.x = posX
-                    player.y = posY
+                        player.x = posX
+                        player.y = posY
 
             # Building stuff
-            if ";" in building_data:
+            if "ID" not in building_data and "OWNER" in building_data:
                 self.clear_buildings()
                 buildings = building_data.split('|')
-                print(len(buildings))
+                #print(len(buildings))
                 buildings.pop(-1)
-                print(buildings)
+                #print(buildings)
                 for building in buildings:
                         building_data = building.split(';')
                         posX = int(building_data[0][2:])
@@ -112,6 +123,7 @@ class Simulation:
                 a=pygame.mouse.get_pressed()
                 if a[0]:
                     self.left=True
+                    self.bullets.append(self.player.fire_bullet())
 
                 if a[2]:
                     self.right=True

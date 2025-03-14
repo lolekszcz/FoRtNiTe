@@ -2,6 +2,7 @@ import random
 from classes import simulation
 
 import pygame
+import subprocess
 
 class Button:
     def __init__(self, width, height, x, y, translucent, font, text, bgcolor, fgcolor, function, app):
@@ -32,7 +33,9 @@ class Button:
         self.app.screen.blit(self.display_text, self.display_text_rect)
     def click(self):
         if self.function == 'play':
-            self.app.ui = simulation.Simulation(self.app) # Change the displayed ui to a new simulation
+            self.app.ui = simulation.Simulation(self.app, self.app.ui.serverbox.text) # Change the displayed ui to a new simulation
+        if self.function == "start_server":
+            subprocess.Popen(['python', "server.py"], shell=True)
         if self.function == 'back':
             self.app.ui = self.app.active_simulation # Change the displayed ui back to the simulation
             self.app.active_simulation = None

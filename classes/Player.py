@@ -1,5 +1,6 @@
 from classes.GameObject import GameObject
 from classes.Obstacles import Wall
+from classes.bullet import Bullet
 import math
 max_health=100
 player_speed=5
@@ -82,3 +83,7 @@ class Player(GameObject):
             wall = Wall(self.game,self.vwall.x,self.vwall.y,self.vwall.w,self.vwall.h,None)
             self.game.socket.send(f"ADD_BUILDING|X={self.vwall.x};Y={self.vwall.y};Y={self.vwall.w};Y={self.vwall.h};".encode())
             return wall
+
+    def fire_bullet(self):
+        bullet = Bullet(self.game, self.x, self.y, 5, 20,None, 1, 50, self.dx, self.dy)
+        return bullet

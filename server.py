@@ -1,7 +1,22 @@
 import asyncio
 import threading
-from socket import socket
+import socket
 
+def get_local_ip():
+    # Connect to an external server to find the local IP
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.settimeout(0)
+
+    try:
+        # Try to connect to a public server (Google's DNS server)
+        s.connect(('8.8.8.8', 80))
+        local_ip = s.getsockname()[0]  # This will get the local IP address
+    except Exception:
+        local_ip = '127.0.0.1'  # If there's an error (e.g., no network), return localhost
+    finally:
+        s.close()
+
+    return local_ip
 class Player:
     def __init__(self, position, current_weapon, rotation, health):
         self.Position = position
@@ -28,8 +43,13 @@ class Server:
         self.host = host
         self.port = port
 
-        self.s = socket()
-        self.s.bind(('127.0.0.1', port))
+        self.s = socket.socket()
+
+        self.ip = get_local_ip()
+
+        print("Server is running on " + self.ip)
+
+        self.s.bind((self.ip, port))
         self.s.listen(5)
 
         self.clients = []
@@ -92,10 +112,11 @@ class Server:
                         print("oof")
 
                 # Process the data and send a response back to the client
-                response = " "
+                response = ""
                 for i, player in enumerate(self.players):
                     if i != client_id:
-                        response = (f"X={player.Position[0]};Y={player.Position[1]};ID={i};")  # other player
+                        response = (f"X={player.Position[0]};Y={player.Position[1]};ID={i};|")  # other player
+
                 response += "\n"
 
                 # Buildings
