@@ -38,7 +38,8 @@ class Bullet(GameObject.GameObject):
                 self.window.blit(self.image, self.rect)
             else:
 
-                pygame.draw.rect(self.game.window, self.color, self.rect)
+                #pygame.draw.rect(self.game.window, self.color, self.rect)
+                pygame.draw.circle(self.game.window, self.color, (self.x, self.y), 5)
 
     def detect_collision(self, other_objects):
         """

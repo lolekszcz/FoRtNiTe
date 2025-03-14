@@ -85,5 +85,5 @@ class Player(GameObject):
             return wall
 
     def fire_bullet(self):
-        bullet = Bullet(self.game, self.x, self.y, 5, 20,None, 1, 50, self.dx, self.dy)
+        bullet = Bullet(self.game, self.x, self.y, 10, 10,None, 3, 50, self.dx, self.dy)
         return bullet
